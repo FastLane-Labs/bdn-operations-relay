@@ -17,21 +17,30 @@ import (
 
 // Server handler http calls
 type Server struct {
-	server        *http.Server
-	cfg           *config.Config
-	intentService *service.Intent
+	server              *http.Server
+	cfg                 *config.Config
+	intentService       *service.Intent
+	subscriptionService *service.SubscriptionManager
 }
 
 // NewServer creates and returns a new websocket server managed by feedManager
 func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
-	intentService, err := service.NewIntent(ctx, cfg)
+	subsManager := service.NewSubscriptionManager()
+	intentService, err := service.NewIntent(ctx, cfg, subsManager)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create intent service: %v", err)
 	}
 
+	// subscribe to intents right away
+	err = intentService.SubscribeToIntents(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to subscribe to intents: %v", err)
+	}
+
 	return &Server{
-		cfg:           cfg,
-		intentService: intentService,
+		cfg:                 cfg,
+		intentService:       intentService,
+		subscriptionService: subsManager,
 	}, nil
 }
 
@@ -76,13 +85,32 @@ func (s *Server) Shutdown() {
 	if err != nil {
 		logger.Error("failed to close intent service", "error", err)
 	}
+
+	s.subscriptionService.Close()
 }
 
 func writeResponseData(w http.ResponseWriter, data interface{}) {
 	b, err := json.Marshal(data)
 	if err != nil {
 		logger.Error("failed to marshal response data", "error", err)
+		writeErrResponse(w, http.StatusInternalServerError, err.Error())
+	}
 
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	_, err = w.Write(b)
+	if err != nil {
+		logger.Error("failed to write response", "error", err)
+	}
+}
+
+func writeErrResponse(w http.ResponseWriter, status int, errMessage string) {
+	resp := map[string]string{
+		"error": errMessage,
+	}
+
+	b, err := json.Marshal(resp)
+	if err != nil {
+		logger.Error("failed to marshal error response data", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, err = w.Write([]byte(err.Error()))
 		if err != nil {
@@ -91,11 +119,15 @@ func writeResponseData(w http.ResponseWriter, data interface{}) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(status)
 	_, err = w.Write(b)
 	if err != nil {
 		logger.Error("failed to write response", "error", err)
 	}
+}
+
+func writeInternalErrResponse(w http.ResponseWriter) {
+	writeErrResponse(w, http.StatusInternalServerError, "something went wrong, please try again later")
 }
 
 func parseRequest(r *http.Request, v interface{}) error {

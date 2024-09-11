@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -20,14 +21,16 @@ import (
 
 // Intent is a service for interacting with the BDN intent network
 type Intent struct {
-	client *sdk.Client
-	cfg    *config.Config
+	client              *sdk.Client
+	cfg                 *config.Config
+	subscriptionManager *SubscriptionManager
 }
 
 // NewIntent creates a new Intent service
-func NewIntent(ctx context.Context, cfg *config.Config) (*Intent, error) {
+func NewIntent(ctx context.Context, cfg *config.Config, subscriptionManager *SubscriptionManager) (*Intent, error) {
 	sdkConfig := &sdk.Config{
 		AuthHeader: cfg.BDN.AuthHeader,
+		Logger:     new(logger.Instance),
 	}
 
 	if cfg.BDN.GRPCURL != "" {
@@ -51,8 +54,9 @@ func NewIntent(ctx context.Context, cfg *config.Config) (*Intent, error) {
 	}
 
 	return &Intent{
-		client: client,
-		cfg:    cfg,
+		client:              client,
+		cfg:                 cfg,
+		subscriptionManager: subscriptionManager,
 	}, nil
 }
 
@@ -62,12 +66,7 @@ func (i *Intent) Close() error {
 }
 
 // SubmitIntent submits an intent to the BDN
-func (i *Intent) SubmitIntent(ctx context.Context, userOp *types.UserOperationPartialRaw) (string, error) {
-	intent, err := json.Marshal(userOp)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal user operation: %w", err)
-	}
-
+func (i *Intent) SubmitIntent(ctx context.Context, intent []byte) (string, error) {
 	params := &sdk.SubmitIntentParams{
 		DappAddress:      i.cfg.DAppAddress,
 		SenderPrivateKey: i.cfg.DAppPrivateKey,
@@ -82,18 +81,54 @@ func (i *Intent) SubmitIntent(ctx context.Context, userOp *types.UserOperationPa
 	var p fastjson.Parser
 	v, err := p.ParseBytes(*resp)
 	if err != nil {
-		fmt.Println(err)
+		return "", fmt.Errorf("failed to parse message: %w", err)
 	}
 
 	return string(v.GetStringBytes("intent_id")), nil
 }
 
+func (i *Intent) SubscribeToIntents(ctx context.Context) error {
+	params := &sdk.IntentsParams{
+		SolverPrivateKey: i.cfg.SolverPrivateKey,
+		// TODO uncomment when the BDN supports filtering by DApp address
+		// DappAddress: i.cfg.DAppAddress,
+	}
+
+	err := i.client.OnIntents(ctx, params, func(ctx context.Context, err error, result *sdk.OnIntentsNotification) {
+		if err != nil {
+			logger.Error("error receiving intent", "error", err)
+			return
+		}
+		logger.Debug("received intent", "dapp_address", result.DappAddress, "sender_address", result.SenderAddress,
+			"intent_id", result.IntentID)
+
+		// TODO uncomment when the BDN supports filtering by DApp address
+		if result.DappAddress != i.cfg.DAppAddress {
+			logger.Debug("ignoring intent from different DApp address", "dapp_address", result.DappAddress)
+			return
+		}
+
+		rawIntent := make([]byte, base64.StdEncoding.DecodedLen(len(result.Intent)))
+		_, err = base64.StdEncoding.Decode(rawIntent, result.Intent)
+		if err == nil {
+			result.Intent = rawIntent
+		}
+
+		i.subscriptionManager.Notify(result)
+	})
+	if err != nil {
+		return fmt.Errorf("failed to subscribe to intents: %w", err)
+	}
+
+	return nil
+}
+
 // SubmitIntentSolution submits an intent solution to the BDN
-func (i *Intent) SubmitIntentSolution(ctx context.Context, intentID string, intentSolution []byte) error {
+func (i *Intent) SubmitIntentSolution(ctx context.Context, intentID string, intent []byte) error {
 	params := &sdk.SubmitIntentSolutionParams{
 		SolverPrivateKey: i.cfg.SolverPrivateKey,
 		IntentID:         intentID,
-		IntentSolution:   intentSolution,
+		IntentSolution:   intent,
 	}
 
 	_, err := i.client.SubmitIntentSolution(ctx, params)
@@ -127,15 +162,22 @@ func (i *Intent) GetIntentSolutions(ctx context.Context, intentID string) ([]typ
 	for _, obj := range v.GetArray() {
 		intentSolution := obj.Get("intent_solution").GetStringBytes()
 
-		var solverOperation types.SolverOperationRaw
-		err = json.Unmarshal(intentSolution, &solverOperation) // TODO use var p fastjson.Parser
+		out := make([]byte, base64.StdEncoding.DecodedLen(len(intentSolution)))
+		n, err := base64.StdEncoding.Decode(out, intentSolution)
+		if err != nil {
+			logger.Error("failed to decode intent solution from base64", "error", err, "intent_solution", string(intentSolution))
+			continue
+		}
+
+		var solverOperation *types.SolverOperationRaw
+		err = json.Unmarshal(out[:n], &solverOperation) // TODO use var p fastjson.Parser
 		if err != nil {
 			logger.Error("failed to unmarshal intent solution into SolverOperationRaw", "error", err,
 				"intent_solution", string(intentSolution))
 			continue
 		}
 
-		result = append(result, solverOperation)
+		result = append(result, *solverOperation)
 	}
 
 	return result, nil

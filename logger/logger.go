@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -13,20 +14,54 @@ func InitLogger(level string) {
 	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stdout, parseLevel(strings.ToLower(level)), true)))
 }
 
-func Debug(format string, v ...interface{}) {
-	log.Debug(format, v...)
+func Debug(msg string, v ...interface{}) {
+	log.Debug(msg, v...)
 }
 
-func Info(format string, v ...interface{}) {
-	log.Info(format, v...)
+func Info(msg string, v ...interface{}) {
+	log.Info(msg, v...)
 }
 
-func Warn(format string, v ...interface{}) {
-	log.Warn(format, v...)
+func Warn(msg string, v ...interface{}) {
+	log.Warn(msg, v...)
 }
 
-func Error(format string, v ...interface{}) {
-	log.Error(format, v...)
+func Error(msg string, v ...interface{}) {
+	log.Error(msg, v...)
+}
+
+type Instance struct{}
+
+func (l *Instance) Debug(args ...interface{}) {
+	Debug(fmt.Sprint(args...))
+}
+
+func (l *Instance) Debugf(msg string, args ...interface{}) {
+	Debug(fmt.Sprintf(msg, args...))
+}
+
+func (l *Instance) Info(args ...interface{}) {
+	Info(fmt.Sprint(args...))
+}
+
+func (l *Instance) Infof(msg string, args ...interface{}) {
+	Info(fmt.Sprintf(msg, args...))
+}
+
+func (l *Instance) Warn(args ...interface{}) {
+	Warn(fmt.Sprint(args...))
+}
+
+func (l *Instance) Warnf(msg string, args ...interface{}) {
+	Warn(fmt.Sprintf(msg, args...))
+}
+
+func (l *Instance) Error(args ...interface{}) {
+	Error(fmt.Sprint(args...))
+}
+
+func (l *Instance) Errorf(msg string, args ...interface{}) {
+	Error(fmt.Sprintf(msg, args...))
 }
 
 func parseLevel(level string) slog.Level {

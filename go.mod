@@ -4,11 +4,14 @@ go 1.22.5
 
 require (
 	github.com/FastLane-Labs/atlas-sdk-go v0.0.0-20240905084332-938389daf445
-	github.com/bloXroute-Labs/bloxroute-sdk-go v1.5.0
+	github.com/bloXroute-Labs/bloxroute-sdk-go v1.5.1
+	github.com/cornelk/hashmap v1.0.8
 	github.com/ethereum/go-ethereum v1.14.8
 	github.com/go-playground/validator/v10 v10.19.0
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
-	github.com/gorilla/websocket v1.5.1
+	github.com/gorilla/websocket v1.5.3
+	github.com/sourcegraph/jsonrpc2 v0.2.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/valyala/fastjson v1.6.4
@@ -20,7 +23,7 @@ require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.13.0 // indirect
-	github.com/bloXroute-Labs/gateway/v2 v2.129.2 // indirect
+	github.com/bloXroute-Labs/gateway/v2 v2.129.19 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -65,7 +68,6 @@ require (
 	github.com/satori/go.uuid v1.2.1-0.20181016170032-d91630c85102 // indirect
 	github.com/savsgio/gotils v0.0.0-20240303185622-093b76447511 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
-	github.com/sourcegraph/jsonrpc2 v0.2.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
