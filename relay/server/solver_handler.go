@@ -165,7 +165,9 @@ func (h *wsConnHandler) handleSubmitSolverOperation(ctx context.Context, conn *j
 	err = h.intentService.SubmitIntentSolution(context.Background(), string(intentID), intentSolution.MarshalTo(nil))
 	if err != nil {
 		h.sendErrorMsg(ctx, jsonrpc2.CodeInternalError, fmt.Sprintf("failed to submit solver opertaion: %v", err), conn, req.ID)
+		return
 	}
+	log.Debug("solver operation submitted", "intent_id", string(intentID), "caller", h.remoteAddress)
 }
 
 // sendErrorMsg formats and sends an RPC error message back to the client
