@@ -146,21 +146,53 @@ func (i *Intent) GetIntentSolutions(ctx context.Context, intentID string) ([]typ
 		IntentID:               intentID,
 	}
 
-	resp, err := i.client.GetSolutionsForIntent(ctx, params)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get intent solutions: %w", err)
+	getSolutionsArray := func() ([]*fastjson.Value, error) {
+		resp, err := i.client.GetSolutionsForIntent(ctx, params)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get intent solutions: %w", err)
+		}
+
+		var p fastjson.Parser
+		v, err := p.ParseBytes(*resp)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse message: %w", err)
+		}
+		return v.GetArray(), nil
 	}
 
-	var p fastjson.Parser
-	v, err := p.ParseBytes(*resp)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse message: %w", err)
+	maxAttempts := 5
+	durationBetweenAttempts := 50 * time.Millisecond
+
+	var (
+		vArr []*fastjson.Value
+		err  error
+	)
+
+	for attempt := 1; attempt < maxAttempts; attempt++ {
+		if attempt > maxAttempts {
+			break
+		}
+		vArr, err = getSolutionsArray()
+		if err != nil {
+			logger.Error("failed to get solutions array", "error", err, "attempt", attempt+1)
+			break
+		}
+		logger.Debug("GetIntentSolutions", "attempt_number", attempt, "numSolutions", len(vArr))
+		if len(vArr) > 0 {
+			break
+		}
+
+		time.Sleep(durationBetweenAttempts)
 	}
-	logger.Debug("GetIntentSolutions", "numSolutions", len(v.GetArray()))
+
+	if err != nil {
+		return nil, err
+	}
+	logger.Debug("GetIntentSolutions", "numSolutions", len(vArr))
 
 	var result []types.SolverOperationRaw
 
-	for _, obj := range v.GetArray() {
+	for _, obj := range vArr {
 		intentSolution := obj.Get("intent_solution").GetStringBytes()
 
 		out := make([]byte, base64.StdEncoding.DecodedLen(len(intentSolution)))
