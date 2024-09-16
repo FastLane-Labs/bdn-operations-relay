@@ -174,6 +174,7 @@ func (i *Intent) GetIntentSolutions(ctx context.Context, intentID string) ([]typ
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse message: %w", err)
 	}
+	logger.Debug("GetIntentSolutions", "numSolutions", len(v.GetArray()))
 
 	var result []types.SolverOperationRaw
 
