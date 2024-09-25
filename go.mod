@@ -3,7 +3,7 @@ module github.com/bloXroute-Labs/bdn-operations-relay
 go 1.22.5
 
 require (
-	github.com/FastLane-Labs/atlas-sdk-go v0.0.0-20240905084332-938389daf445
+	github.com/FastLane-Labs/atlas-sdk-go v0.0.0-20240925121838-92919d7c1c7c
 	github.com/bloXroute-Labs/bloxroute-sdk-go v1.5.1
 	github.com/cornelk/hashmap v1.0.8
 	github.com/ethereum/go-ethereum v1.14.8
