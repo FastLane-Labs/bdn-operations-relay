@@ -7,6 +7,7 @@ require (
 	github.com/bloXroute-Labs/bloxroute-sdk-go v1.5.1
 	github.com/cornelk/hashmap v1.0.8
 	github.com/ethereum/go-ethereum v1.14.8
+	github.com/fasthttp/websocket v1.5.8
 	github.com/go-playground/validator/v10 v10.19.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
@@ -33,7 +34,6 @@ require (
 	github.com/crate-crypto/go-kzg-4844 v1.0.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
 	github.com/ethereum/c-kzg-4844 v1.0.2 // indirect
-	github.com/fasthttp/websocket v1.5.8 // indirect
 	github.com/fluent/fluent-logger-golang v1.9.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect

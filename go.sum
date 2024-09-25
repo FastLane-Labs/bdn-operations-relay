@@ -1,7 +1,5 @@
 github.com/DataDog/zstd v1.5.5 h1:oWf5W7GtOLgp6bciQYDmhHHjdhYkALu6S/5Ni9ZgSvQ=
 github.com/DataDog/zstd v1.5.5/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=
-github.com/FastLane-Labs/atlas-sdk-go v0.0.0-20240905084332-938389daf445 h1:vMVxeyPlHeZW9zx5Yzo5ud78ilK8apZ8W2b9RCx8abw=
-github.com/FastLane-Labs/atlas-sdk-go v0.0.0-20240905084332-938389daf445/go.mod h1:+L36AOdP4Itmc2Hcsb3/y3bwfPZhLIHF3FY77vxDNeg=
 github.com/FastLane-Labs/atlas-sdk-go v0.0.0-20240925121838-92919d7c1c7c h1:oxf869c23XtdmcUeoszsZE+ObLOY47RajMA/LsLdLfY=
 github.com/FastLane-Labs/atlas-sdk-go v0.0.0-20240925121838-92919d7c1c7c/go.mod h1:+L36AOdP4Itmc2Hcsb3/y3bwfPZhLIHF3FY77vxDNeg=
 github.com/VictoriaMetrics/fastcache v1.12.2 h1:N0y9ASrJ0F6h0QaC3o6uJb3NIZ9VKLjCM7NQbSmF7WI=
