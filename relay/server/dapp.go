@@ -40,6 +40,8 @@ func (s *Server) userOperation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.intentService.SubscribeToIntentSolutions(intentID)
+
 	writeResponseData(w, map[string]string{
 		"intent_id": intentID,
 	})

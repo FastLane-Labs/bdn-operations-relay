@@ -23,7 +23,7 @@ func Run(cfg *config.Config) error {
 	}
 
 	eg.Go(func() error {
-		return s.Start()
+		return s.Start(gCtx)
 	})
 
 	<-gCtx.Done()

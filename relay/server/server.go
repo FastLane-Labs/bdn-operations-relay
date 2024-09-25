@@ -37,6 +37,11 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, fmt.Errorf("failed to subscribe to intents: %v", err)
 	}
 
+	err = intentService.SubscribeToSolutions(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to subscribe to solutions: %v", err)
+	}
+
 	return &Server{
 		cfg:                 cfg,
 		intentService:       intentService,
@@ -45,7 +50,13 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 }
 
 // Start setup handlers and start http server
-func (s *Server) Start() error {
+func (s *Server) Start(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return nil
+	default:
+	}
+
 	s.server = &http.Server{
 		Addr:              fmt.Sprintf(":%v", s.cfg.HTTPPort),
 		ReadHeaderTimeout: time.Second * 5,
