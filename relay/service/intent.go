@@ -120,8 +120,9 @@ func (i *Intent) SubscribeToIntents(ctx context.Context) error {
 		}
 
 		rawIntent := make([]byte, base64.StdEncoding.DecodedLen(len(result.Intent)))
-		_, err = base64.StdEncoding.Decode(rawIntent, result.Intent)
+		n, err := base64.StdEncoding.Decode(rawIntent, result.Intent)
 		if err == nil {
+			rawIntent = rawIntent[:n]
 			result.Intent = rawIntent
 		}
 
