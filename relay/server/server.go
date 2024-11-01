@@ -37,9 +37,12 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, fmt.Errorf("failed to subscribe to intents: %v", err)
 	}
 
-	err = intentService.SubscribeToSolutions(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to subscribe to solutions: %v", err)
+	// subscribe to solutions only if dapp private key is set
+	if cfg.DAppPrivateKey != "" {
+		err = intentService.SubscribeToSolutions(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to subscribe to solutions: %v", err)
+		}
 	}
 
 	return &Server{
