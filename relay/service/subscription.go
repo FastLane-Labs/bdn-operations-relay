@@ -110,7 +110,7 @@ func (s *SubscriptionManager) Notify(n interface{}) {
 				select {
 				case subscription.NotificationChannel <- n:
 				default:
-					logger.Warn("notification channel for subscription is full, dropping notification")
+					logger.Error("notification channel for subscription is full, dropping notification")
 				}
 			}
 		}

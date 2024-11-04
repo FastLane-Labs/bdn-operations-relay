@@ -87,6 +87,10 @@ func (h *wsConnHandler) handleSubscribe(ctx context.Context, conn *jsonrpc2.Conn
 		_ = h.subscriptionService.Unsubscribe(h.remoteAddress, subscription.ID)
 	}()
 
+	defer func() {
+		conn.Close()
+	}()
+
 	response := subscribeResponse{
 		SubscriptionID: subscription.ID,
 	}
@@ -191,6 +195,7 @@ func (h *wsConnHandler) handlerSubscriptionMessages(ctx context.Context, conn *j
 			return
 		case msg, ok := <-subscription.NotificationChannel:
 			if !ok {
+				logger.Error("subscription channel closed")
 				return
 			}
 
